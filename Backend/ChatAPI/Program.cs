@@ -1,3 +1,4 @@
+using ChatAPI.DataService;
 using ChatAPI.Hubs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +24,8 @@ builder.Services.AddCors(opt =>
             .AllowCredentials();
     });
 });
+
+builder.Services.AddSingleton<ShareDb>();
 
 var app = builder.Build();
 

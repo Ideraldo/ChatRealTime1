@@ -1,4 +1,5 @@
-﻿using ChatAPI.Models;
+﻿using ChatAPI.DataService;
+using ChatAPI.Models;
 using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
 
@@ -6,18 +7,35 @@ namespace ChatAPI.Hubs
 {
     public class ChatHub : Hub
     {
-        public async Task JoinChat(UserConnection connect)
+        private readonly ShareDb _shared;
+
+        public ChatHub(ShareDb shared) => _shared = shared;
+
+        public async Task JoinChat(UserConnection connecttion)
         {
             await Clients.All
-                .SendAsync("ReceiveMessage", "admin", $"{connect.UserName} has joined");
+                .SendAsync("ReceiveMessage", "admin", $"{connecttion.UserName} has joined");
         }
 
-        public async Task JoinSpecificChatRoom(UserConnection connect)
+        public async Task JoinSpecificChatRoom(UserConnection connecttion)
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, connect.ChatRoom);
+            await Groups.AddToGroupAsync(Context.ConnectionId, connecttion.ChatRoom);
+
+            _shared.connections[Context.ConnectionId] = connecttion;
+            
             await Clients
-                .Group(connect.ChatRoom)
-                .SendAsync("JoinSpecificChatRoom", "admin", $"{connect.UserName} has joined {connect.ChatRoom}");
+                .Group(connecttion.ChatRoom)
+                .SendAsync("JoinSpecificChatRoom", "admin", $"{connecttion.UserName} has joined {connecttion.ChatRoom}");
         }
+
+        public async Task SendMessage(string msg)
+        {
+            if(_shared.connections.TryGetValue(Context.ConnectionId, out UserConnection connecttion))
+            {
+                await Clients.Groups(connecttion.ChatRoom)
+                    .SendAsync("ReceiveSpecificMessage", connecttion.UserName, msg);
+            }
+        }
+
     }
 }
