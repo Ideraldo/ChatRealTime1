@@ -5,7 +5,6 @@ namespace ChatAPI.DataService
 {
     public class ShareDb
     {
-        private readonly ConcurrentDictionary<string, UserConnection> _connections = new();
-        public ConcurrentDictionary<string, UserConnection> connections => _connections;
+        public ConcurrentDictionary<string, UserConnection> Connections { get; } = new();
     }
 }

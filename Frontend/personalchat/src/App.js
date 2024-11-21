@@ -2,13 +2,14 @@ import "./App.css";
 import { Col, Row, Container } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import WaitingRoom from "./components/waitingroom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import ChatRoom from "./components/ChatRoom";
 
 function App() {
   const [connect, setConnection] = useState();
   const [messages, setMessages] = useState([]);
+  const [currentRoom, setCurrentRoom] = useState('');
 
   const joinChatRoom = async (username, chatroom) => {
     try {
@@ -26,13 +27,34 @@ function App() {
         setMessages((messages) => [...messages, { username, msg }]);
       });
 
+      connect.on("ReceiveMessage", (username, msg) => {
+        setMessages((messages) => [...messages, { username, msg }]);
+      });
+
+      connect.on("ReceiveRecentMessages", (recentMessages) => {
+        setMessages(recentMessages.map(m => ({ username: m.userName, msg: m.message })));
+      });
+
       await connect.start();
       await connect.invoke("JoinSpecificChatRoom", { username, chatroom });
       setConnection(connect);
+      setCurrentRoom(chatroom);
     } catch (e) {
       console.log(e.message);
     }
   };
+
+  useEffect(() => {
+    if (connect && currentRoom) {
+      connect.invoke("GetRecentMessages", currentRoom);
+    }
+    
+    return () => {
+      if (connect) {
+        connect.stop();
+      }
+    };
+  }, [connect, currentRoom]);
 
   const sendMessage = async(message) => {
     try{
@@ -48,7 +70,7 @@ function App() {
         <Container>
           <Row className="px-5 my-5">
             <Col sm="12">
-              <h1 className="font-weight-light">TESTTTTTTTTTTTTTTTT</h1>
+              <h1 className="font-weight-light">Welcome to Ideraldo's chat!</h1>
             </Col>
           </Row>
           {!connect ? (

@@ -1,8 +1,12 @@
 using ChatAPI.DataService;
 using ChatAPI.Hubs;
+using ChatAPI.Repositories;
+using ChatAPI.Services;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +28,19 @@ builder.Services.AddCors(opt =>
             .AllowCredentials();
     });
 });
+
+// Configuração do MongoDB
+var connectionString = builder.Configuration.GetConnectionString("MongoDb");
+var client = new MongoClient(connectionString);
+var database = client.GetDatabase("NodeJSTest"); 
+builder.Services.AddSingleton(database);
+builder.Services.AddSingleton<IChatRepository, MongoChatRepository>();
+builder.Services.AddScoped<ChatService>();
+
+builder.Services.AddSingleton<OllamaService>();
+
+builder.Services.AddHttpClient<OllamaService>();
+builder.Services.AddSingleton<OllamaService>();
 
 builder.Services.AddSingleton<ShareDb>();
 
