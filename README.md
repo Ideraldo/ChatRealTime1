@@ -7,10 +7,10 @@ This repository hosts a **Personalized Chatbot** built using a local Large Langu
 - [Features](#features)
 - [Technologies Used](#technologies-used)
 - [Architecture Overview](#architecture-overview)
-- [Setup Instructions](#setup-instructions)
 - [Future Enhancements](#future-enhancements)
-- [Contributing](#contributing)
-- [License](#license)
+
+![image](https://github.com/user-attachments/assets/1f6cbf7b-f7e0-4ecf-af5b-edc8419cc043)
+
 
 ---
 
@@ -36,7 +36,6 @@ This repository hosts a **Personalized Chatbot** built using a local Large Langu
 ### Frontend
 - **React 18+**: Frontend framework.
 - **SignalR Client**: To establish communication with the backend.
-- **TailwindCSS** (optional): For styling and responsiveness.
 
 ### Development and Deployment
 - **Docker**: For containerization.
@@ -56,7 +55,7 @@ This repository hosts a **Personalized Chatbot** built using a local Large Langu
    - SignalR Hub serves as the central point for real-time communication.  
    - Ollama processes incoming user inputs and generates responses.  
 
-### 3. **RAG Integration** *(Future)*  
+### 3. **RAG Integration** 
    - A `Retriever` module will query external document sources to provide context-aware responses.  
    - Combined with Ollama, this approach will use retrieved information to enhance language model responses.
 
