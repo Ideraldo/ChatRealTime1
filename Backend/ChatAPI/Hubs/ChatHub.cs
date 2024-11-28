@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using ChatAPI.DataService;
 using ChatAPI.Models;
 using Microsoft.AspNetCore.SignalR;
@@ -13,6 +14,8 @@ namespace ChatAPI.Hubs
         private readonly ShareDb _shared;
         private readonly ChatService _chatService;
         private readonly OllamaService _ollamaService;
+        private static HashSet<string> chatRoomsWithOllama = [];
+
 
         public ChatHub(ShareDb shared, ChatService chatService, OllamaService ollamaService)
         {
@@ -39,12 +42,16 @@ namespace ChatAPI.Hubs
                 .SendAsync(HubConstants.JOIN_SPECIFIC_CHAT_ROOM, UserConstants.SYSTEM_USER,
                     $"{connection.UserName} has joined {connection.ChatRoom}");
 
-            // Adicionar Ollama ao grupo
-            // VALIDAR SE ELE JA ESTA NO GRUPO
-            await Clients
-                .Group(connection.ChatRoom)
-                .SendAsync(HubConstants.JOIN_SPECIFIC_CHAT_ROOM, UserConstants.OLLAMA_USER,
-                    "Ollama AI has joined the chat");
+            // Check if Ollama AI is already in the chat room
+            if (!chatRoomsWithOllama.Contains(connection.ChatRoom))
+            {
+                chatRoomsWithOllama.Add(connection.ChatRoom);
+
+                await Clients
+                    .Group(connection.ChatRoom)
+                    .SendAsync(HubConstants.JOIN_SPECIFIC_CHAT_ROOM, UserConstants.OLLAMA_USER,
+                        "Ollama AI has joined the chat");
+            }
         }
 
         public async Task SendMessage(string msg)
@@ -56,8 +63,8 @@ namespace ChatAPI.Hubs
                     .SendAsync("ReceiveSpecificMessage", connection.UserName, msg);
 
                 _ollamaService.AddMessageToContext(connection.UserName, msg);
-
-                if (_ollamaService.ShouldRespond())
+                var shouldResponse = await _ollamaService.ShouldRespond();
+                if (shouldResponse)
                 {
                     await SendOllamaResponse(connection.ChatRoom);
                 }
@@ -87,13 +94,12 @@ namespace ChatAPI.Hubs
         {
             await foreach (var response in _ollamaService.GenerateResponseAsync())
             {
-                await _chatService.SaveMessageAsync("Ollama AI", chatRoom, response);
+                await _chatService.SaveMessageAsync(UserConstants.OLLAMA_USER, chatRoom, response);
                 await Clients.Group(chatRoom)
-                    .SendAsync("ReceiveSpecificMessage", "Ollama AI", response);
+                    .SendAsync(HubConstants.RECEIVE_SPECIFIC_MESSAGE, UserConstants.OLLAMA_USER, response);
 
-                _ollamaService.AddMessageToContext("Ollama AI", response);
+                _ollamaService.AddMessageToContext(UserConstants.OLLAMA_USER, response);
 
-                // Pequena pausa entre mensagens para simular digitação
                 await Task.Delay(1000);
             }
         }

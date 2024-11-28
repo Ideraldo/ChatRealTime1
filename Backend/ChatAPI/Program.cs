@@ -37,7 +37,7 @@ builder.Services.AddSingleton(database);
 builder.Services.AddSingleton<IChatRepository, MongoChatRepository>();
 builder.Services.AddScoped<ChatService>();
 
-builder.Services.AddSingleton<OllamaService>();
+builder.Services.AddScoped<OllamaService>();
 
 builder.Services.AddHttpClient<OllamaService>();
 builder.Services.AddSingleton<OllamaService>();

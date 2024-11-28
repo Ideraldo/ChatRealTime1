@@ -2,7 +2,7 @@ namespace ChatAPI.Constants;
 public static class UserConstants
 {
     public const string SYSTEM_USER = "SYSTEM";
-    public const string OLLAMA_USER = "Ollama AI";
+    public const string OLLAMA_USER = "Maira";
 }
 
 public static class HubConstants
